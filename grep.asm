@@ -19,6 +19,7 @@ extern print_string
 extern string_copy
 extern string_length
 extern print_uint
+extern print_newline
 _start:
     pop r8     ;вытащил количество аргументов командной строки
     cmp r8, 2
@@ -92,6 +93,7 @@ _start:
 .print:                     ;пишет строку, в которой нашлось слово
     mov rdi, string
     call print_string
+    call print_newline
     jmp .grep_itself
 .continue:
 

@@ -54,6 +54,7 @@ global string_equals
 global string_copy
 global string_length
 global print_uint
+global print_newline
 
 ; Function    : string_length
 ; Parameters  :	rdi -- pointer to input string
