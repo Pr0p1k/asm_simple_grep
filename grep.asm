@@ -187,21 +187,30 @@ compare:
     ret
 
 
-divide:             ;выносит следующую строку в string. Принимает буффер и строку
-    xor ecx, ecx                  ;Обнуление
-    .loop:
-        cmp byte[next_string+rcx], 0xA  ;сравнение - закончена ли строка
-        je .exit                ;если да, то выход
-        cmp byte[next_string+rcx], 0
-        je .exit
-        mov rax, [next_string+rcx]      ;перенос одного символа в аккум
-        mov [rsi+rcx], rax      ;из аккума в новую строку
-        inc rcx
-        jmp .loop
-    .exit:
-        mov byte[rsi+rcx], 0
-        add [next_string], rcx
-        inc qword [next_string]
-        ret
+divide:             ;выносит следующую строку в string.
+    call line_length    ;Принимает буффер(указатель на начало следующей строки) и строку(куда записать)
+    xor rcx, rcx
+.loop:
+    cmp rcx, rax
+    je .ret
+    mov dl, byte[rdi+rcx]
+    mov byte[rsi+rcx], dl
+    inc rcx
+    jmp .loop
+.ret:
+    inc rax
+    add qword[next_string], rax
+    mov byte[rsi+rax], 0
+    ret
 
-
+line_length:
+	xor eax, eax
+	.loop:
+	  cmp byte[rdi + rax], 0xA
+	  je .ret
+	  cmp byte[rdi + rax], 0
+	  je .ret
+	  inc rax
+	  jmp .loop
+	.ret:
+  ret
