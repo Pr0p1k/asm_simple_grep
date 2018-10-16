@@ -65,16 +65,6 @@ _start:
     call string_length
     mov word[bufflen], ax
 .grep_itself:           ;собсна греп
-;    mov rdi, next_string
-;    mov rsi, string
-;    call divide         ;отделяем следующую строку
-;    mov rdi, string
-;    call print_string
-;    mov rdi, next_string
-;    sub rdi, buffer
-;    cmp di, word[bufflen]
-;    jnb .continue
-;    mov r13, string
     mov rdi, qword[next_string]
     mov rsi, string
     call divide
