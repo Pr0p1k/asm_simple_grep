@@ -11,7 +11,7 @@ bufflen: dw 2048
 grepword: times 255 db 0    ;сюда будет записано слово для поиска
 next_string: dq 0       ;указатель на следующую строку
 error_msg: db 'An error occurred', 0
-filename: db 'kek.txt', 0
+filename: db 'source.txt', 0
 section .text
 global _start
 extern string_equals
