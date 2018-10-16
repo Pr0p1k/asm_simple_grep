@@ -11,6 +11,7 @@ bufflen: dw 2048
 grepword: times 255 db 0    ;сюда будет записано слово для поиска
 next_string: dq 0       ;указатель на следующую строку
 error_msg: db 'An error occurred', 0
+filename: db 'kek.txt', 0
 section .text
 global _start
 extern string_equals
@@ -21,53 +22,8 @@ extern print_uint
 _start:
     pop r8     ;вытащил количество аргументов командной строки
     cmp r8, 2
-    je .simple
-    cmp r8, 1
-    je .error
-    cmp r8, 5
-    ja .error
-    pop rsi
-    mov rsi, rsp
-    mov rsi, [rsi]
-.n:             ;Есть ли ключ '-n'
-    mov rdi, n
-    push r8
-    call string_equals
-    pop r8
-    test rax, rax
-    jz .check_f
-    mov byte[is_n], 1
-    dec r8
-    cmp r8, 2
-    je .simple
-.f:
-    pop rsi
-    mov rsi, rsp
-    mov rsi, [rsi]
-.check_f:
-    mov rdi, f
-    push r8
-    call string_equals
-    pop r8
-    test rax, rax
-    jz .n_again
-    pop rsi
-    mov rsi, rsp
-    mov rdi, [rsi]
-    mov eax, 2
-    mov rsi, 0
-    mov rdx, 555
-    syscall
-    test rax, rax
-    js .error
-    mov byte[file], al
-    dec r8
-    cmp r8, 2
-    je .simple
-.n_again:
-
-
-
+    jne .error
+    jmp .simple
 .error:
     mov eax, 1
     mov edi, 1
@@ -77,6 +33,13 @@ _start:
     call exit
 
 .simple:    ;тупа выполнение
+    mov rax, 2
+    mov rdi, filename
+    mov rsi, 0
+    syscall
+    test rax, rax
+    js .error
+    mov byte[file], al
     mov rax, buffer
     mov qword[next_string], rax
     pop rsi
@@ -86,55 +49,52 @@ _start:
     mov rsi, grepword
     mov rdx, rax
     call string_copy
+    mov rdi, grepword
     push r12
     push r13
     xor r12, r12
 .read:
     xor eax, eax
-    mov dl, byte [file] ;дескриптор, откуда читать
+    xor edi, edi
+    mov dil, byte[file]           ;дескриптор, откуда читать
     mov rsi, buffer
     mov rdx, bufflen
     syscall
-    mov r9, rax
-.grep_itself:           ;собсна греп
     mov rdi, buffer
+    call string_length
+    mov word[bufflen], ax
+.grep_itself:           ;собсна греп
+;    mov rdi, next_string
+;    mov rsi, string
+;    call divide         ;отделяем следующую строку
+;    mov rdi, string
+;    call print_string
+;    mov rdi, next_string
+;    sub rdi, buffer
+;    cmp di, word[bufflen]
+;    jnb .continue
+;    mov r13, string
+    mov rdi, qword[next_string]
     mov rsi, string
-    call divide         ;отделяем следующую строку
-    mov rdi, next_string
-    sub rdi, buffer
-    cmp di, word[bufflen]
-    jnb .continue
-    mov r13, string
+    call divide
+    xor eax, eax
+    mov ax, word[bufflen]
+    add rax, buffer
+    cmp qword[next_string], rax
+    jae .continue
 .each_string:           ;ищем по строке
     mov rdi, grepword
-    mov rsi, r13
+    mov rsi, string
     call contains
-    inc r13
-    mov rdi, next_string
-    sub rdi, buffer
-    sub r13, string
-    cmp r13, rdi
-    je .grep_itself
-    add r13, string
     test rax, rax
-    jz .each_string
-    cmp byte[is_n], 1
-    jne .print
-    inc r12
+    jnz .print
     jmp .grep_itself
-
 .print:                     ;пишет строку, в которой нашлось слово
     mov rdi, string
     call print_string
-    jmp .each_string
+    jmp .grep_itself
 .continue:
-    cmp r9, bufflen
-    je .read
-    cmp byte[is_n], 1
-    jne exit
-    mov rdi, r12
-    call print_uint
-    pop r12
+
 exit:           ;выход
     mov rax, 60
     mov rdi, 0
